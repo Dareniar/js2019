@@ -1,0 +1,19 @@
+{
+  "name": "dareniarbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "jsdom": "^15.1.1",
+    "node-telegram-bot-api": "^0.30.0",
+    "request": "^2.88.0",
+    "require": "^2.4.20",
+    "requirejs": "^2.3.6"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
