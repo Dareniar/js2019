@@ -1,6 +1,6 @@
 const http = require('http');
 const firebase = require("firebase-admin");
-const serviceAccount = require("./js2019-b705e-firebase-adminsdk-sh4au-1ba1da47b7.json");
+const serviceAccount = require("./ServiceAccount.json");
 const request = require('request');
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
@@ -48,25 +48,27 @@ const sendMessage = (chat_id, text, res) => {
       if (typeof parsedUpdate.message !== 'undefined') {
         const text = parsedUpdate.message.text;
         const chat_id = parsedUpdate.message.chat.id;
-        console.log(parsedUpdate);
         if (text === '/help') {
           const reply = 'Usage:\n /imageof <your_word> sends you an random image.\nExample:\n/imageof dog - You\'ll get a random image of a dog.\n\nAll images are taken from https://unsplash.com.\n\n/history - You\'ll get history of your photos.'
           sendMessage(chat_id, reply, res)
         } else if (text === '/history') {
-            const reply = 'Usage:\n /imageof <your_word> sends you an random image.\nExample:\n/imageof dog - You\'ll get a random image of a dog.\n\nAll images are taken from https://unsplash.com.\n\n/history - You\'ll get history of your photos.'
-          sendMessage(chat_id, reply, res)
-        //   let photosRef = photos.limit(5).get().then(snapshot => {
-        //       let urls = ''
-        //       snapshot.forEach(doc => {
-        //           urls += doc.data().url + '\n'
-        //       });
-        //       sendMessage(chat_id, urls, res)
-        //   })
+          let photosRef = photos.get().then(snapshot => {
+              console.log(`PHOTO: SUCCESS`);
+              let urls = ''
+              snapshot.forEach(doc => {
+                  urls += doc.data().url + '\n'
+              });
+              console.log(`HISTORY: ${urls}`);
+              sendMessage(chat_id, urls, res)
+          })
         } else if (text.match(/\/imageof (.+)/) != null) {
-          const word = text.match(/\/imageof (.+)/)[1]
+
+          const word = text.match(/\/imageof (.+)/)[1];
           request(`https://unsplash.com/search/photos/${word}`, function (error, response) { 
+              console.log(response);
+              console.log(error);
               const html = new JSDOM(response.body);
-              const images = Array.from(html.window.document.getElementsByTagName("img"))
+              const images = Array.from(html.window.document.getElementsByTagName("img"));
               let sources = [];
               images.forEach(img => {
                   if (img.src.includes('photo')) {
@@ -74,7 +76,6 @@ const sendMessage = (chat_id, text, res) => {
                   }
               });
               const photoURL = sources[Math.floor(Math.random() * sources.length)];
-              console.log(photoURL)
               sendMessage(chat_id, photoURL, res)
               let addDoc = db.collection('photos').add({
                   url: photoURL
@@ -103,3 +104,5 @@ const sendMessage = (chat_id, text, res) => {
       console.log(body);
     })
   };
+
+  setWebHook()
