@@ -65,11 +65,11 @@ const sendMessage = (chat_id, text, res) => {
                   }
               });
               const photoURL = sources[Math.floor(Math.random() * sources.length)];
-              sendMessage(chat_id, '\n' + word + '\n\n' + photoURL, res)
+              sendMessage(chat_id, word + '\n' + photoURL, res)
               ref.push().set({url: photoURL})
           });
         } else if (text === '/history') {
-          let urls = '\nLast requests:\n\n';
+          let urls = 'Last requests:\n\n';
           ref.limitToLast(5).once("value", function(snap) {
             snap.forEach(function(data) {
               if (data.val().url !== 'undefined') {
