@@ -1,19 +1,20 @@
+
 const http = require('http');
-const firebase = require("firebase-admin");
-const serviceAccount = require("./ServiceAccount.json");
+const firebase = require('firebase-admin');
+const serviceAcoount = require('./ServiceAccount.json')
 const request = require('request');
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
-const webHookUrl = 'https://dareniarbot.danilshchegol.now.sh/';
-const BOT_TOKEN = '850976535:AAHlda5zro82_Gnqz8KBS70I5yBBc-FGoAQ';
+const webHookUrl = 'https://dareniarphotobot3.danilshchegol.now.sh';
+const BOT_TOKEN = '872565896:AAFps1T52KNMofzN_ULNbLgXz9s02nunRrI';
 
 firebase.initializeApp({
-  credential: firebase.credential.cert(serviceAccount),
-  databaseURL: "https://js2019-b705e.firebaseio.com"
+  credential: firebase.credential.cert(serviceAcoount),
+  databaseURL: "https://js2019-b705e.firebaseio.com/"
 });
 
-const db = firebase.firestore();
-const photos = db.collection('photos');
+const db = firebase.database();
+const ref = db.ref('photos'); 
 
 const sendMessage = (chat_id, text, res) => {
     const sendMessageUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
@@ -28,7 +29,7 @@ const sendMessage = (chat_id, text, res) => {
         json: true
       },
       (error, response, body) => {
-        //console.log(error);
+        console.log(error);
         console.log(body);
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end()
@@ -49,23 +50,11 @@ const sendMessage = (chat_id, text, res) => {
         const text = parsedUpdate.message.text;
         const chat_id = parsedUpdate.message.chat.id;
         if (text === '/help') {
-          const reply = 'Usage:\n /imageof <your_word> sends you an random image.\nExample:\n/imageof dog - You\'ll get a random image of a dog.\n\nAll images are taken from https://unsplash.com.\n\n/history - You\'ll get history of your photos.'
+          const reply = 'Usage:\n /imageof <your_word> sends you a random image.\nExample:\n/imageof dog - You\'ll get a random image of a dog.\n\nAll images are taken from https://unsplash.com.\n\n/history - You\'ll get history of your photos.'
           sendMessage(chat_id, reply, res)
-        } else if (text === '/history') {
-          let photosRef = photos.get().then(snapshot => {
-              console.log(`PHOTO: SUCCESS`);
-              let urls = ''
-              snapshot.forEach(doc => {
-                  urls += doc.data().url + '\n'
-              });
-              console.log(`HISTORY: ${urls}`);
-              sendMessage(chat_id, urls, res)
-          })
-        } else if (text.match(/\/imageof (.+)/) != null) {
-
-          const word = text.match(/\/imageof (.+)/)[1];
+        } else if (text.includes('/imageof')) {
+          const word = text.toString().replace('/imageof', '');
           request(`https://unsplash.com/search/photos/${word}`, function (error, response) { 
-              console.log(response);
               console.log(error);
               const html = new JSDOM(response.body);
               const images = Array.from(html.window.document.getElementsByTagName("img"));
@@ -76,12 +65,18 @@ const sendMessage = (chat_id, text, res) => {
                   }
               });
               const photoURL = sources[Math.floor(Math.random() * sources.length)];
-              sendMessage(chat_id, photoURL, res)
-              let addDoc = db.collection('photos').add({
-                  url: photoURL
-                  }).then(ref => {
-                  console.log('Added document with ID: ', ref.id);
-                  });
+              sendMessage(chat_id, '\n' + word + '\n\n' + photoURL, res)
+              ref.push().set({url: photoURL})
+          });
+        } else if (text === '/history') {
+          let urls = '\nLast requests:\n\n';
+          ref.limitToLast(5).once("value", function(snap) {
+            snap.forEach(function(data) {
+              if (data.val().url !== 'undefined') {
+                urls += data.val().url + '\n\n';
+              }
+            });
+            sendMessage(chat_id, urls, res);
           });
         }
       }
