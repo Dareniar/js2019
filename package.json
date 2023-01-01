@@ -19,7 +19,7 @@
     "popper.js": "^1.15.0",
     "request": "^2.88.0",
     "utf-8-validate": "^5.0.2",
-    "webpack": "^4.34.0",
+    "webpack": "^5.75.0",
     "worker-threads": "^1.0.0"
   },
   "devDependencies": {},
